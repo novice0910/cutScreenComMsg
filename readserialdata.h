@@ -49,10 +49,10 @@ public slots:
     void init();
     void slotOpenSerial(const QString &dev, quint32 baud);
     void slotCloseSerial();
+    void slotGetTestBuf(char* buf,int length);
 private:
     QTimer *readTimer;
     checkOut * crc16;
-    bool m_hasCrc; //is have crc?
     void receive();
 private slots:
     void slotReceiveData();

@@ -18,6 +18,7 @@ class feedbackSerial : public QObject
     Q_OBJECT
 public:
     feedbackSerial();
+    ~feedbackSerial();
 public slots:
     void init();
 signals:

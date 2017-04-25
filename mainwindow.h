@@ -27,20 +27,21 @@ public:
     ~MainWindow();
 public slots:
     void slotGetOpenSerialResult(bool result);
-    void sloWriteCurrentSheet(const QList<QList<QVariant> > &cells);
+    void slotWriteCurrentSheet(const QList<QList<QVariant> > &cells);
 signals:
     void signalOpenSerial(const QString &,quint32);
     void signalCloseSerial();
+    void signalSendTestBuf(char *buf,int length);
 private slots:
     void on_btnOpenSerial_clicked();
     void on_btnSave_clicked();
+    void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
     bool m_serialIsOpen;
     bool m_canWriteCell;
     QScopedPointer<ExcelBase> m_xls;
-    QThread * thrServer;
     feedbackSerial *feedBack;
     QThread *thrFeedBack;
     readSerialData *readSerial;

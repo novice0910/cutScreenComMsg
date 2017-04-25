@@ -507,6 +507,42 @@ bool ExcelBase::writeCurrentSheet(const QList<QList<QVariant> > &cells)
     return true;
 #endif
 }
+
+bool ExcelBase::appendCurrentSheetFromNextRow(const QList<QList<QVariant> > &cells)
+{
+#if defined(Q_OS_WIN)
+    Q_D(ExcelBase);
+    if(cells.size() <= 0)
+        return false;
+    if(NULL == d->sheet || d->sheet->isNull())
+        return false;
+    QAxObject* urange  = d->sheet->querySubObject("UsedRange");
+    int rowEnd = urange->querySubObject("Rows"   )->property("Count").toInt();
+    delete urange;
+
+    int row = cells.size();
+    int col = cells.at(0).size();
+    QString rangStr;
+    convertToColName(col,rangStr);
+    rangStr += QString::number(row);
+    rangStr = tr("A%1:").arg(QString::number(rowEnd + 1)) + rangStr;
+    qDebug()<<rangStr<<rowEnd +1;
+    QAxObject *range = d->sheet->querySubObject("Range(const QString&)",rangStr);
+    if(NULL == range || range->isNull())
+    {
+        return false;
+    }
+    bool succ = false;
+    QVariant var;
+    castListListVariant2Variant(cells,var);
+    succ = range->setProperty("Value", var);
+    delete range;
+    return succ;
+#else
+    return true;
+#endif
+}
+
 ///
 /// \brief 把列数转换为excel的字母列号
 /// \param data 大于0的数

@@ -100,7 +100,7 @@ public:
     QVariant readAll();
     void readAll(QList<QList<QVariant> > &cells);
     bool writeCurrentSheet(const QList<QList<QVariant> > &cells);
-
+    bool appendCurrentSheetFromNextRow(const QList<QList<QVariant> > &cells);
     static void convertToColName(int data, QString &res);
     static QString to26AlphabetString(int data);
     static void castListListVariant2Variant(const QList<QList<QVariant> > &cells,QVariant& res);

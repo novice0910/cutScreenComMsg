@@ -88,4 +88,7 @@ void readSerialData::receive()
     }
 }
 
-
+void readSerialData::slotGetTestBuf(char *buf, int length)
+{
+    writeData(buf,length);
+}

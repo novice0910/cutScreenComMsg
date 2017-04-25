@@ -15,8 +15,6 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    TC_FREE(thrServer);
-    TC_FREE(thrServer);
     TC_FREE(feedBack);
     TC_FREE(thrFeedBack);
     TC_FREE(readSerial);
@@ -40,7 +38,6 @@ void MainWindow::construct()
 
 void MainWindow::init()
 {
-    thrServer = new QThread;
     feedBack = new feedbackSerial;
     thrFeedBack = new QThread;
     readSerial = new readSerialData;
@@ -53,12 +50,14 @@ void MainWindow::init()
     connect(this,SIGNAL(signalOpenSerial(const QString &,quint32)),readSerial,SLOT(slotOpenSerial(const QString &,quint32)));
     connect(readSerial,SIGNAL(signalOpenSerialResult(bool)),this,SLOT(slotGetOpenSerialResult(bool)));
     connect(this,SIGNAL(signalCloseSerial()),readSerial,SLOT(slotCloseSerial()));
+    connect(this,SIGNAL(signalSendTestBuf(char*,int)),readSerial,SLOT(slotGetTestBuf(char*,int)));
     thrReadSerial->start();
 
     //解析及反馈数据
     feedBack->moveToThread(thrFeedBack);
     connect(thrFeedBack,SIGNAL(finished()),feedBack,SLOT(deleteLater()));
     connect(thrFeedBack,SIGNAL(started()),feedBack,SLOT(init()));
+    connect(feedBack,SIGNAL(signalWriteCurrentSheet(QList<QList<QVariant> >)),this,SLOT(slotWriteCurrentSheet(QList<QList<QVariant> >)));
     thrFeedBack->start();
 
 }
@@ -99,9 +98,6 @@ void MainWindow::slotGetOpenSerialResult(bool result)
 
 void MainWindow::on_btnSave_clicked()
 {
-//    QString xlsFile = QFileDialog::getExistingDirectory(this);
-//    if(xlsFile.isEmpty())
-//        return;
     if(m_serialIsOpen)// serial has opened
     {
         if(m_canWriteCell == false)//from can not save to can save
@@ -117,21 +113,21 @@ void MainWindow::on_btnSave_clicked()
                 m_xls.reset(new ExcelBase);
             m_xls->create(xlsFile);
             m_xls->setCurrentSheet(1);
-            qDebug()<<"create cost:"<<timer.elapsed()<<"ms";timer.restart();
-            QList< QList<QVariant> > m_datas;
-            for(int i=0;i<1000;++i)
-            {
-                QList<QVariant> rows;
-                for(int j=0;j<100;++j)
-                {
-                    rows.append(i*j);
-                }
-                m_datas.append(rows);
-            }
-            timer.restart();
-            m_xls->writeCurrentSheet(m_datas);
-            qDebug()<<"write cost:"<<timer.elapsed()<<"ms";timer.restart();
-            m_xls->save();
+//            qDebug()<<"create cost:"<<timer.elapsed()<<"ms";timer.restart();
+//            QList< QList<QVariant> > m_datas;
+//            for(int i=0;i<1000;++i)
+//            {
+//                QList<QVariant> rows;
+//                for(int j=0;j<100;++j)
+//                {
+//                    rows.append(i*j);
+//                }
+//                m_datas.append(rows);
+//            }
+//            timer.restart();
+//            m_xls->writeCurrentSheet(m_datas);
+//            qDebug()<<"write cost:"<<timer.elapsed()<<"ms";timer.restart();
+//            m_xls->save();
         }
         else
         {
@@ -139,7 +135,7 @@ void MainWindow::on_btnSave_clicked()
             ui->btnOpenSerial->setEnabled(true);
             ui->btnSave->setText("save");
 
-//            m_xls->save();
+            m_xls->save();
             m_xls->close();
         }
     }
@@ -150,10 +146,24 @@ void MainWindow::on_btnSave_clicked()
 
 }
 
-void MainWindow::sloWriteCurrentSheet(const QList<QList<QVariant> > &cells)
+void MainWindow::slotWriteCurrentSheet(const QList<QList<QVariant> > &cells)
 {
     if(m_canWriteCell)
     {
         m_xls->writeCurrentSheet(cells);
     }
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    char buf[8] ={0x5A,0xA5,0x05,0x81,0x1E,0x01,0xE9,0x88};
+    QList<QList <QVariant> >cell;
+    QList <QVariant> row;//this row infomation
+    for(int i=0;i<8;++i)
+    {
+        INTTOBCD(buf[i]);
+        row.append(buf[i]);
+    }
+    cell.append(row);
+    m_xls->appendCurrentSheetFromNextRow(cell);
 }

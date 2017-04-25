@@ -8,6 +8,10 @@ feedbackSerial::feedbackSerial()
     crc16 = new checkOut;
 }
 
+feedbackSerial::~feedbackSerial()
+{
+}
+
 void feedbackSerial::init()
 {
     manageDate();
